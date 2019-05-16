@@ -22,11 +22,11 @@ public class RegistrationController {
     }
 
     @PostMapping("/registration")
-    public String addUser(User user, Map<String, Object> mogel) {
+    public String addUser(User user, Map<String, Object> model) {
         User userFromDb = userRepo.findByUsername(user.getUsername());
 
         if(userFromDb != null) {
-            mogel.put("message", "User exists");
+            model.put("message", "User exists");
             return "registration";
         }
 
