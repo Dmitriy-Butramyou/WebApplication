@@ -3,7 +3,6 @@ package com.example.web.service;
 import com.example.web.domain.Role;
 import com.example.web.domain.User;
 import com.example.web.repos.UserRepo;
-import freemarker.template.utility.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,22 +28,27 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-       User user = userRepo.findByUsername(username);
+        User user = userRepo.findByUsername(username);
 
-       if(user == null) {
-           throw new UsernameNotFoundException("User not found");
-       }
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
         return user;
     }
+
     public boolean addUser(User user) {
         User userFromDb = userRepo.findByUsername(user.getUsername());
 
-        if(userFromDb != null) {
+        if (userFromDb != null) {
             return false;
         }
-        user.setActive(true);
+        // Указываем Active false, так как почта ещё не подтверждена
+        user.setActive(false);
+        // Устанавливаем роль
         user.setRoles(Collections.singleton(Role.USER));
+        // Генерируем ActivationCode
         user.setActivationCode(UUID.randomUUID().toString());
+        // Шифруем пароль
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepo.save(user);
@@ -54,7 +58,7 @@ public class UserService implements UserDetailsService {
     }
 
     private void sendMessage(User user) {
-        if(!StringUtils.isEmpty(user.getEmail())) {
+        if (!StringUtils.isEmpty(user.getEmail())) {
             String message = String.format(
                     "Hello, %s! \n" +
                             "Welcome to my first WebApp. Please, visit next link: http://localhost:8080/activate/%s",
@@ -73,15 +77,17 @@ public class UserService implements UserDetailsService {
         }
 
         user.setActivationCode(null);
+        // Указываем Active true, говоря о том что почта подтверждена
+        user.setActive(true);
         userRepo.save(user);
-        return  true;
+        return true;
     }
 
     public List<User> findAll() {
         return userRepo.findAll();
     }
 
-    public void saveUser(User user, String username, Map<String,String> form) {
+    public void saveUser(User user, String username, Map<String, String> form) {
         user.setUsername(username);
 
         Set<String> roles = Arrays.stream(Role.values())
@@ -90,8 +96,8 @@ public class UserService implements UserDetailsService {
 
         user.getRoles().clear();
 
-        for(String key : form.keySet()) {
-            if(roles.contains(key)){
+        for (String key : form.keySet()) {
+            if (roles.contains(key)) {
                 user.getRoles().add(Role.valueOf(key));
             }
         }
@@ -106,18 +112,18 @@ public class UserService implements UserDetailsService {
 
         if (isEmailChanged) {
             user.setEmail(email);
-            if(!StringUtils.isEmpty(email)) {
+            if (!StringUtils.isEmpty(email)) {
                 user.setActivationCode(UUID.randomUUID().toString());
             }
         }
 
-        if(!StringUtils.isEmpty(password)) {
-//            user.setPassword(passwordEncoder.encode(password));
-            user.setPassword(password);
+        if (!StringUtils.isEmpty(password)) {
+            // Шифруем новый пароль пользователя
+            user.setPassword(passwordEncoder.encode(password));
         }
         userRepo.save(user);
 
-        if(isEmailChanged) {
+        if (isEmailChanged) {
             sendMessage(user);
         }
 
