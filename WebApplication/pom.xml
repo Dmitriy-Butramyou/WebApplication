@@ -38,6 +38,8 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+
+
         <!-- Use MySQL Connector-->
 
         <dependency>
@@ -50,6 +52,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Use Spring Session JDBC-->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-jdbc</artifactId>
         </dependency>
 
         <!-- flyway -->
